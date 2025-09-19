@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files / Caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info
+pip-wheel-metadata
+
+# Django stuff:
+*.log
+/static/
+db.sqlite3
+# Environments
+.env
+
+# JS stuff
+node_modules
+dist
+.cache
+.parcel-cache
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
