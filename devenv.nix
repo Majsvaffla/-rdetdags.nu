@@ -24,7 +24,7 @@
     ];
   };
 
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     shellcheck = {
       enable = true;
       files = "bin";
