@@ -1,22 +1,14 @@
 services:
   app:
-    image: ghcr.io/majsvaffla/ärdetdags:latest
+    image: ghcr.io/majsvaffla/dax:latest
     ports:
-      - 8000:8000
+      - 8001:8000
     volumes:
       - /var/www/ärdetdags.nu/static:/var/lib/ärdetdags/static
       - /var/www/ärdetdags.nu/media:/var/lib/ärdetdags/media
     environment:
-      DJANGO_SETTINGS_MODULE: ärdetdags.conf.settings.production
-      DATABASE_URL: ${DATABASE_URL}
-      SECRET_KEY: ${SECRET_KEY}
-      FQDN: ärdetdags.nu
-      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
-      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
-      SLACK_VERIFICATION_TOKEN: ${SLACK_VERIFICATION_TOKEN}
-      SLACK_BOT_USER_TOKEN: ${SLACK_BOT_USER_TOKEN}
       SENTRY_DSN: ${SENTRY_DSN}
-    command: gunicorn --bind 0.0.0.0:8000 --workers 2 ärdetdags.conf.wsgi:application
+    command: gunicorn --bind 0.0.0.0:8000 --workers 2 dags:app
     restart: unless-stopped
     depends_on:
       migrate:
@@ -26,28 +18,8 @@ services:
       database:
         condition: service_healthy
 
-  migrate:
-    image: ghcr.io/majsvaffla/ärdetdags:latest
-    environment:
-      DJANGO_SETTINGS_MODULE: ärdetdags.conf.settings.deploy
-      DATABASE_URL: ${DATABASE_URL}
-      SECRET_KEY: ${SECRET_KEY}
-    command: django-admin migrate
-    depends_on:
-      database:
-        condition: service_healthy
-
-  collectstatic:
-    image: ghcr.io/majsvaffla/ärdetdags:latest
-    volumes:
-      - /var/www/ärdetdags.nu/static:/var/lib/ärdetdags/static
-    environment:
-      DJANGO_SETTINGS_MODULE: ärdetdags.conf.settings.deploy
-      SECRET_KEY: ${SECRET_KEY}
-    command: django-admin collectstatic --noinput
-
   database:
-    image: postgres:13.8
+    image: postgres:17
     volumes:
       - /var/lib/ärdetdags/pgdata:/var/lib/postgresql/data
       - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh

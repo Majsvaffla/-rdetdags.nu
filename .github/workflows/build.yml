@@ -57,12 +57,12 @@ jobs:
           load: true
           context: dist
           file: Dockerfile
-          tags: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }}
+          tags: ghcr.io/majsvaffla/dax:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Test that the image basically works
-        run: docker run --rm ghcr.io/majsvaffla/ärdetdags:${{ github.sha }} python -c "import ärdetdags"
+        run: docker run --rm ghcr.io/majsvaffla/dax:${{ github.sha }} python -c "import dags"
 
       - name: Push to container registry
         uses: docker/build-push-action@v5
@@ -71,7 +71,7 @@ jobs:
           push: true
           context: dist
           file: Dockerfile
-          tags: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }},ghcr.io/majsvaffla/ärdetdags:latest
+          tags: ghcr.io/majsvaffla/dax:${{ github.sha }},ghcr.io/majsvaffla/dax:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
