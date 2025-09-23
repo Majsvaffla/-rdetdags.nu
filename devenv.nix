@@ -41,4 +41,7 @@
   dotenv.enable = true;
 
   scripts.deploy.exec = "bin/deploy";
+  scripts.run-server.exec = ''
+    flask --app dags --debug run
+  '';
 }
