@@ -4,7 +4,7 @@ import htpy as h
 import sentry_sdk
 from flask import Flask, make_response
 
-if dsn := os.environ["SENTRY_DSN"]:
+if dsn := os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(
         dsn=dsn,
         # Add data like request headers and IP for users,
