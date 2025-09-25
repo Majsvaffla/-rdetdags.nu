@@ -1,9 +1,10 @@
 import os
+import zoneinfo
+from datetime import datetime
+
 import htpy as h
 import sentry_sdk
 from flask import Flask, make_response, request
-from datetime import datetime
-from markupsafe import Markup
 
 if dsn := os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(
@@ -14,6 +15,9 @@ if dsn := os.environ.get("SENTRY_DSN"):
     )
 
 app = Flask(__name__)
+
+CET = zoneinfo.ZoneInfo("Europe/Stockholm")
+
 
 @app.route("/")
 def hello_world():
@@ -46,9 +50,7 @@ def hello_world():
                                         required=True,
                                     )
                                 ],
-                                h.div(".text-center")[
-                                    h.button(".btn.btn-primary.mt-2", type="submit")["Ok"],
-                                ],
+                                h.div(".text-center")[h.button(".btn.btn-primary.mt-2", type="submit")["Ok"],],
                             ],
                         ],
                     ],
@@ -56,6 +58,7 @@ def hello_world():
             ]
         )
     )
+
 
 @app.route("/countdown", methods=["POST"])
 def countdown():
@@ -69,13 +72,10 @@ def countdown():
     # No more chaos in code, no more files that fight,
     # With Postgres on our side, everything works right!
 
-
     pickdatetime = request.form.get("pickdatetime")
 
     if not pickdatetime:
-        return make_response(
-            str(h.div(".text-danger.fw-bold.text-center")["❌ Inget datum angivet"])
-        )
+        return make_response(str(h.div(".text-danger.fw-bold.text-center")["❌ Inget datum angivet"]))
 
     try:
         # Try fromisoformat first
@@ -83,14 +83,12 @@ def countdown():
             target_time = datetime.fromisoformat(pickdatetime)
         except ValueError:
             # Fallback: try strptime for datetime-local format
-            target_time = datetime.strptime(pickdatetime, "%Y-%m-%dT%H:%M")
+            target_time = datetime.strptime(pickdatetime, "%Y-%m-%dT%H:%M").replace(tzinfo=CET)
 
         # Check if the target time is in the past
-        current_time = datetime.now()
+        current_time = datetime.now(tz=CET)
         if target_time <= current_time:
-            return make_response(
-                str(h.div(".text-warning.fw-bold.text-center")["⚠️ Vald tid har redan passerat"])
-            )
+            return make_response(str(h.div(".text-warning.fw-bold.text-center")["⚠️ Vald tid har redan passerat"]))
         return make_response(f"""
 <div class="text-center mt-3">
     <div id="countdown"></div>
@@ -119,7 +117,5 @@ def countdown():
     </script>
 </div>
 """)
-    except (ValueError, TypeError) as e:
-        return make_response(
-            str(h.div(".text-danger.fw-bold.text-center")["❌ Ogiltigt datum"])
-        )
+    except (ValueError, TypeError):
+        return make_response(str(h.div(".text-danger.fw-bold.text-center")["❌ Ogiltigt datum"]))
