@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import zoneinfo
 from datetime import datetime
 
@@ -15,6 +16,8 @@ if dsn := os.environ.get("SENTRY_DSN"):
     )
 
 app = Flask(__name__)
+
+db = sqlite3.connect("dax.db")
 
 CET = zoneinfo.ZoneInfo("Europe/Stockholm")
 
