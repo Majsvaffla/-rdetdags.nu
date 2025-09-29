@@ -57,27 +57,25 @@ def home():
     return make_response(
         base_template(
             h.div[
-                h.h1(".h4.text-center.mb-4")["Är det dags nu?"],
+                h.h1["Är det dags nu?"],
                 h.form(
                     hx_post="/countdown",
                     hx_target="this",
                     hx_swap="outerHTML",
                 )[
-                    h.div(".mb-3")[
+                    h.fieldset[
                         h.input(
-                            ".form-control",
                             placeholder="Titel",
                             name="title",
                             required=True,
                         ),
                         h.input(
-                            ".form-control.mt-3",
                             type="datetime-local",
                             name="dt",
                             required=True,
                         ),
                     ],
-                    h.div(".text-center")[h.button(".btn.btn-primary.mt-2", type="submit")["Dags?"],],
+                    h.input(type="submit", value="Dags?"),
                 ],
             ],
         )
