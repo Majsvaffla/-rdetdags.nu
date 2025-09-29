@@ -103,27 +103,37 @@ def countdown():
 def get_countdown(slug):
     cd = CountDown.query.filter_by(slug=slug).first_or_404()
 
-    return make_response(
-        base_template(
-            h.div[
-                h.h1[f"{cd.title}"],
-                h.div("#countdown"),
-                h.script[
-                    Markup(f"""
-                    simplyCountdown('#countdown', {{
-                        year: {cd.date.year},
-                        month: {cd.date.month},
-                        day: {cd.date.day},
-                        hours: {cd.date.hour},
-                        minutes: {cd.date.minute},
-                        seconds: {cd.date.second},
-                        words: {{ day: 'dagar', hour: 'timmar', minute: 'minuter', second: 'sekunder' }},
-                        inline: true,
-                        enableUtc: false,
-                        onEnd: function(){{ console.log('Countdown finished!'); }},
-                    }});
+    target = cd.date.replace(tzinfo=CET)
+
+    if target <= datetime.now(CET):
+        content = h.div[
+            h.h1[f"{cd.title}"],
+            h.p["Det är dags!"],
+            h.img(src=f"{url_for('static', filename='done.png')}"),
+        ]
+    else:
+        content = h.div[
+            h.h1[f"{cd.title}"],
+            h.div("#flipdown.flipdown"),
+            h.script[
+                Markup(f"""
+                        document.addEventListener('DOMContentLoaded', () => {{
+
+                        // Unix timestamp (in seconds) to count down to
+                        var twoDaysFromNow = {int(cd.date.timestamp())};
+
+                        // Set up FlipDown
+                        var flipdown = new FlipDown(twoDaysFromNow,
+                           {{
+                           headings: ["Dagar", "Timmar", "Minuter", "Sekunder"],
+                           }}
+                           ).start()
+                            .ifEnded(() => {{
+                            console.log('The countdown has ended!');
+                            }});
+                        }});
                 """)
-                ],
-            ]
-        )
-    )
+            ],
+        ]
+
+    return make_response(base_template(content))

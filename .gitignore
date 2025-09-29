@@ -7,7 +7,6 @@ pip-wheel-metadata
 
 # Django stuff:
 *.log
-/static/
 db.sqlite3
 # Environments
 .env
