@@ -42,13 +42,6 @@ jobs:
           uv build --wheel
           uv export --frozen --no-dev --no-hashes --no-emit-project > dist/requirements.txt
 
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 18
-
-      - name: Build node modules and JS bundle
-        run: npm install && npm run build
-
       - name: Build and load into Docker
         id: docker_build
         uses: docker/build-push-action@v5
