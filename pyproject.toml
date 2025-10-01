@@ -3,13 +3,11 @@ authors = [
   {name = "David Svenson", email = "davidsvenson@outlook.com"},
 ]
 dependencies = [
-  "dj-database-url",
   "flask>=3.1.2",
   "flask-sqlalchemy>=3.1.1",
   "gunicorn",
   "htpy",
   "markupsafe>=3.0.2",
-  "psycopg[binary]",
   "sentry-sdk[flask]",
 ]
 dynamic = ["version", "description"]
