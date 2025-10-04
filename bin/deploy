@@ -30,6 +30,7 @@ curl="curl -sS \
 function alive_or_exit {
     # shellcheck disable=SC2068
     if [[ $($@) != "Tackar som frågar!"* ]]; then
+        >&2 echo "Health check failed :("
         exit 1
     fi
 }
