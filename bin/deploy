@@ -6,7 +6,7 @@ set -x
 
 fqdn="xn--rdetdags-zza.nu"
 # Copy required configuration files.
-scp compose.yml init-user-db.sh dax@$fqdn: > /dev/null
+scp compose.yml dax@$fqdn: > /dev/null
 
 # Decrypt and copy secrets.
 age --decrypt --identity "$AGE_IDENTITY" secrets.env.age | ssh dax@$fqdn "cat > ~/.env"
