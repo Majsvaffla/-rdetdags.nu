@@ -4,7 +4,7 @@ services:
     ports:
       - 8001:8000
     volumes:
-      - /var/lib/ärdetdags.nu/dax.db:/var/lib/ärdetdags/dax.db
+      - /var/lib/ärdetdags/dax.db:/var/lib/ärdetdags/dax.db
     environment:
       SENTRY_DSN: ${SENTRY_DSN}
     command: gunicorn --bind 0.0.0.0:8000 --workers 2 dax:app
