@@ -1,6 +1,7 @@
 [project]
 authors = [
   {name = "David Svenson", email = "davidsvenson@outlook.com"},
+  {name = "Emil Björkroth", email = "emil.bjorkroth@gmail.com"},
 ]
 dependencies = [
   "flask>=3.1.2",
@@ -11,7 +12,7 @@ dependencies = [
   "sentry-sdk[flask]",
 ]
 dynamic = ["version", "description"]
-name = "ardetdags"
+name = "dax"
 requires-python = ">=3.13"
 
 [build-system]
@@ -23,7 +24,7 @@ source = "scm"
 
 [tool.pdm.build]
 includes = [
-  "ärdetdags",
+  "dax",
 ]
 
 [tool.ruff]

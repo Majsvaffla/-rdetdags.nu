@@ -10,7 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 from markupsafe import Markup
 from sqlalchemy.orm import validates
 
-from components import base_template
+from .components import base_template
 
 CET = zoneinfo.ZoneInfo("Europe/Stockholm")
 

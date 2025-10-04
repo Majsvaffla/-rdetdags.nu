@@ -55,7 +55,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Test that the image basically works
-        run: docker run --rm ghcr.io/majsvaffla/dax:${{ github.sha }} python -c "import dags"
+        run: docker run --rm ghcr.io/majsvaffla/dax:${{ github.sha }} python -c "import dax"
 
       - name: Push to container registry
         uses: docker/build-push-action@v5
