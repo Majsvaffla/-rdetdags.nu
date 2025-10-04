@@ -9,10 +9,3 @@ services:
       SENTRY_DSN: ${SENTRY_DSN}
     command: gunicorn --bind 0.0.0.0:8000 --workers 2 dax.dags:app
     restart: unless-stopped
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      collectstatic:
-        condition: service_completed_successfully
-      database:
-        condition: service_healthy
