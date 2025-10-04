@@ -52,6 +52,11 @@ with app.app_context():
     db.create_all()
 
 
+@app.route("/-/")
+def healt_check():
+    return make_response("Tackar som frågar!", 200)
+
+
 @app.route("/")
 def home():
     return make_response(
