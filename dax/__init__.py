@@ -112,4 +112,4 @@ def api_countdown(slug: str) -> Response:
     cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
     if not cd:
         return _make_json_response(None, 404)
-    return _make_json_response({"timestamp": cd.date.replace(CET).isoformat()}, 200)
+    return _make_json_response({"title": cd.title, "timestamp": cd.date.replace(CET).isoformat()}, 200)
