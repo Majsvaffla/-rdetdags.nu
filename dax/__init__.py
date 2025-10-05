@@ -1,18 +1,17 @@
 import os
 import re
-import zoneinfo
 from datetime import datetime
+from urllib.parse import urljoin
 
-import htpy as h
 import sentry_sdk
-from flask import Flask, make_response, request, url_for
+from flask import Flask, make_response, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from markupsafe import Markup, escape
+from markupsafe import escape
 from sqlalchemy.orm import validates
+from werkzeug.wrappers import Response
 
-from .components import base_template, form
-
-CET = zoneinfo.ZoneInfo("Europe/Stockholm")
+from . import components
+from .constants import CET
 
 if dsn := os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(
@@ -53,70 +52,33 @@ with app.app_context():
 
 
 @app.route("/-/")
-def health_check():
-    return make_response("Tackar som frågar!", 200)
+def health_check() -> Response:
+    return make_response("Tackar som frågar!")
 
 
-@app.route("/")
-def home():
-    return form("Är det dags nu?")
-
-
-@app.route("/countdown", methods=["POST"])
-def countdown():
-    data = request.form
-    assert data
-
-    title = data["title"]
-    date = datetime.fromisoformat(data["dt"])
-
-    new_cd = CountDown(title=title, date=date)
-    db.session.add(new_cd)
-    db.session.commit()
-
-    resp = make_response("", 200)
-    resp.headers["HX-Redirect"] = url_for("get_countdown", slug=new_cd.slug)
-    return resp
-
-
+@app.route("/", methods=["GET", "POST"])
 @app.route("/<slug>", methods=["GET"])
-def get_countdown(slug):
-    cd = CountDown.query.filter_by(slug=slug).first()
+def countdown(slug: str | None = None) -> Response:
+    if request.method == "POST":
+        data = request.form
+        if not data or "title" not in data or "dt" not in data:
+            return make_response("Formuläret måste fyllas i korrekt.", 400)
 
-    if not cd:
-        return make_response(form("När är det dags?", escape(slug)), 404)
+        title = data["title"]
+        date = datetime.fromisoformat(data["dt"])
 
-    target = cd.date.replace(tzinfo=CET)
+        new_cd = CountDown(title=title, date=date)
+        db.session.add(new_cd)
+        db.session.commit()
 
-    if target <= datetime.now(CET):
-        content = h.div[
-            h.h1[f"{cd.title}"],
-            h.p["Det är dags!"],
-            h.img(src=f"{url_for('static', filename='done.png')}"),
-        ]
-    else:
-        content = h.div[
-            h.h1[f"{cd.title}"],
-            h.div("#flipdown.flipdown"),
-            h.script[
-                Markup(f"""
-                        document.addEventListener('DOMContentLoaded', () => {{
+        return redirect(urljoin(url_for("countdown"), new_cd.slug), code=301)
 
-                        // Unix timestamp (in seconds) to count down to
-                        var twoDaysFromNow = {int(cd.date.timestamp())};
+    assert request.method == "GET"
 
-                        // Set up FlipDown
-                        var flipdown = new FlipDown(twoDaysFromNow,
-                           {{
-                           headings: ["Dagar", "Timmar", "Minuter", "Sekunder"],
-                           }}
-                           ).start()
-                            .ifEnded(() => {{
-                            console.log('The countdown has ended!');
-                            }});
-                        }});
-                """)
-            ],
-        ]
+    if not slug:
+        return make_response(str(components.form("När är det dags?")))
 
-    return make_response(base_template(content))
+    if cd := CountDown.query.filter_by(slug=slug).first():
+        return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.replace(tzinfo=CET))))
+
+    return make_response(str(components.form("När är det dags?", escape(slug))), 404)
