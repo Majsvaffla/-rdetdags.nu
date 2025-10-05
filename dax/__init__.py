@@ -36,7 +36,7 @@ class CountDown(db.Model):  # type: ignore[name-defined]
 
     @property
     def is_past(self) -> bool:
-        return self.date.astimezone(CET) < datetime.now(CET) - timedelta(days=1)  # type: ignore[no-any-return]
+        return self.date.replace(tzinfo=CET) < datetime.now(CET) - timedelta(days=1)  # type: ignore[no-any-return]
 
 
 # Ensure tables exist
@@ -81,7 +81,7 @@ def countdown(slug: str | None = None) -> Response:
         if not data or "title" not in data or "dt" not in data:
             return _make_bad_request_response()
 
-        target = datetime.fromisoformat(data["dt"]).astimezone(CET)
+        target = datetime.fromisoformat(data["dt"]).replace(tzinfo=CET)
         if target < datetime.now(CET):
             return _make_bad_request_response()
 
@@ -98,7 +98,7 @@ def countdown(slug: str | None = None) -> Response:
     if not cd or cd.is_past:
         return make_response(str(components.form(initial_title=escape(slug).capitalize())), 404)
 
-    return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.astimezone(CET))))
+    return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.replace(tzinfo=CET))))
 
 
 def _make_json_response(data: dict | None, status_code: int) -> Response:
@@ -112,4 +112,4 @@ def api_countdown(slug: str) -> Response:
     cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
     if not cd:
         return _make_json_response(None, 404)
-    return _make_json_response({"timestamp": cd.date.astimezone(CET).isoformat()}, 200)
+    return _make_json_response({"timestamp": cd.date.replace(CET).isoformat()}, 200)
