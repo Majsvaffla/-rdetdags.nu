@@ -1,4 +1,5 @@
 import htpy as h
+from flask import url_for
 from markupsafe import Markup
 
 
@@ -33,4 +34,34 @@ def base_template(content: h.Element) -> str:
                 ],
             ],
         ]
+    )
+
+
+def form(heading: str, initial_title: str | None = None) -> str:
+    return base_template(
+        h.div[
+            h.h1[heading],
+            h.form(
+                hx_post=url_for("countdown"),
+                hx_target="this",
+                hx_swap="outerHTML",
+            )[
+                h.fieldset[
+                    h.input(
+                        type="text",
+                        placeholder="Titel",
+                        name="title",
+                        required=True,
+                        maxlength=100,
+                        value=initial_title.capitalize() if initial_title else None,
+                    ),
+                    h.input(
+                        type="datetime-local",
+                        name="dt",
+                        required=True,
+                    ),
+                ],
+                h.input(type="submit", value="Dags?"),
+            ],
+        ],
     )

@@ -7,10 +7,10 @@ import htpy as h
 import sentry_sdk
 from flask import Flask, make_response, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from sqlalchemy.orm import validates
 
-from .components import base_template
+from .components import base_template, form
 
 CET = zoneinfo.ZoneInfo("Europe/Stockholm")
 
@@ -59,32 +59,7 @@ def health_check():
 
 @app.route("/")
 def home():
-    return make_response(
-        base_template(
-            h.div[
-                h.h1["Är det dags nu?"],
-                h.form(
-                    hx_post="/countdown",
-                    hx_target="this",
-                    hx_swap="outerHTML",
-                )[
-                    h.fieldset[
-                        h.input(
-                            placeholder="Titel",
-                            name="title",
-                            required=True,
-                        ),
-                        h.input(
-                            type="datetime-local",
-                            name="dt",
-                            required=True,
-                        ),
-                    ],
-                    h.input(type="submit", value="Dags?"),
-                ],
-            ],
-        )
-    )
+    return form("Är det dags nu?")
 
 
 @app.route("/countdown", methods=["POST"])
@@ -106,7 +81,10 @@ def countdown():
 
 @app.route("/<slug>", methods=["GET"])
 def get_countdown(slug):
-    cd = CountDown.query.filter_by(slug=slug).first_or_404()
+    cd = CountDown.query.filter_by(slug=slug).first()
+
+    if not cd:
+        return make_response(form("När är det dags?", escape(slug)), 404)
 
     target = cd.date.replace(tzinfo=CET)
 
