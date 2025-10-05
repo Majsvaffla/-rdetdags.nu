@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from datetime import date, datetime, timedelta
@@ -98,3 +99,17 @@ def countdown(slug: str | None = None) -> Response:
         return make_response(str(components.form(initial_title=escape(slug).capitalize())), 404)
 
     return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.astimezone(CET))))
+
+
+def _make_json_response(data: dict | None, status_code: int) -> Response:
+    response = make_response("" if data is None else json.dumps(data), status_code)
+    response.headers["Content-Type"] = "application/json"
+    return response
+
+
+@app.route("/api/countdown/<slug>", methods=["GET"])
+def api_countdown(slug: str) -> Response:
+    cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
+    if not cd:
+        return _make_json_response(None, 404)
+    return _make_json_response({"timestamp": cd.date.astimezone(CET).isoformat()}, 200)
