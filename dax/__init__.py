@@ -1,13 +1,11 @@
 import os
-import re
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from urllib.parse import urljoin
 
 import sentry_sdk
 from flask import Flask, make_response, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from markupsafe import escape
-from sqlalchemy.orm import validates
 from werkzeug.wrappers import Response
 
 from . import components
@@ -33,17 +31,9 @@ class CountDown(db.Model):  # type: ignore[name-defined]
     slug = db.Column(db.String(120), unique=True, nullable=False)
     date = db.Column(db.DateTime, nullable=False)
 
-    @validates("title")
-    def generate_slug(self, key, value):
-        base_slug = re.sub(r"[^a-zA-Z0-9]+", "-", value.lower()).strip("-")
-        slug = base_slug
-        counter = 1
-        # ensure uniqueness
-        while CountDown.query.filter_by(slug=slug).first() is not None:
-            slug = f"{base_slug}-{counter}"
-            counter += 1
-        self.slug = slug
-        return value
+    @property
+    def is_past(self) -> bool:
+        return self.date.astimezone(CET) < datetime.now(CET) - timedelta(days=1)  # type: ignore[no-any-return]
 
 
 # Ensure tables exist
@@ -56,29 +46,51 @@ def health_check() -> Response:
     return make_response("Tackar som frågar!")
 
 
+def _slugify(s: str) -> str:
+    return s.lower().strip(" -\n\r\t")
+
+
+def _create_or_edit_countdown(title: str, target: date) -> CountDown:
+    slug = _slugify(title)
+    if (cd := CountDown.query.filter_by(slug=slug).first()) and cd.is_past:
+        cd.date = target
+        db.session.add(cd)
+        db.session.commit()
+        return cd  # type: ignore[no-any-return]
+
+    new_cd = CountDown(title=title, slug=slug, date=target)
+    db.session.add(new_cd)
+    db.session.commit()
+    return new_cd
+
+
+def _make_bad_request_response() -> Response:
+    return make_response("Formuläret är inte korrekt ifyllt.", 400)
+
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/<slug>", methods=["GET"])
 def countdown(slug: str | None = None) -> Response:
     if request.method == "POST":
         data = request.form
         if not data or "title" not in data or "dt" not in data:
-            return make_response("Formuläret måste fyllas i korrekt.", 400)
+            return _make_bad_request_response()
 
-        title = data["title"]
-        date = datetime.fromisoformat(data["dt"])
+        target = datetime.fromisoformat(data["dt"]).astimezone(CET)
+        if target < datetime.now(CET):
+            return _make_bad_request_response()
 
-        new_cd = CountDown(title=title, date=date)
-        db.session.add(new_cd)
-        db.session.commit()
+        cd = _create_or_edit_countdown(data["title"], target)
 
-        return redirect(urljoin(url_for("countdown"), new_cd.slug), code=301)
+        return redirect(urljoin(url_for("countdown"), cd.slug), code=301)
 
     assert request.method == "GET"
 
     if not slug:
-        return make_response(str(components.form("När är det dags?")))
+        return make_response(str(components.form()))
 
-    if cd := CountDown.query.filter_by(slug=slug).first():
-        return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.replace(tzinfo=CET))))
+    cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
+    if not cd or cd.is_past:
+        return make_response(str(components.form(escape(slug))), 404)
 
-    return make_response(str(components.form("När är det dags?", escape(slug))), 404)
+    return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.astimezone(CET))))

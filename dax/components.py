@@ -38,10 +38,10 @@ def base_template(content: h.Element) -> h.Element:
     ]
 
 
-def form(heading: str, initial_title: str | None = None) -> h.Element:
+def form(initial_title: str | None = None) -> h.Element:
     return base_template(
         h.div[
-            h.h1[heading],
+            h.h1["När är det dags?"],
             h.form(action=url_for("countdown"), method="POST")[
                 h.fieldset[
                     h.input(
@@ -56,6 +56,8 @@ def form(heading: str, initial_title: str | None = None) -> h.Element:
                         type="datetime-local",
                         name="dt",
                         required=True,
+                        # Explicitly use no time zone for formatting purposes.
+                        min=datetime.now(CET).astimezone(None).isoformat(timespec="seconds", sep=" "),
                     ),
                 ],
                 h.input(type="submit", value="Dags?"),
