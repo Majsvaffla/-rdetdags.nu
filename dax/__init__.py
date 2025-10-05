@@ -53,7 +53,7 @@ with app.app_context():
 
 
 @app.route("/-/")
-def healt_check():
+def health_check():
     return make_response("Tackar som frågar!", 200)
 
 
