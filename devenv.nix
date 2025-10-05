@@ -42,6 +42,6 @@
 
   scripts.deploy.exec = "bin/deploy";
   scripts.run-server.exec = ''
-    flask --app dags --debug run
+    flask --app dax --debug run
   '';
 }
