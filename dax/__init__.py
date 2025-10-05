@@ -1,5 +1,7 @@
 import os
+import re
 from datetime import date, datetime, timedelta
+from unicodedata import normalize
 from urllib.parse import urljoin
 
 import sentry_sdk
@@ -47,7 +49,9 @@ def health_check() -> Response:
 
 
 def _slugify(s: str) -> str:
-    return s.lower().strip(" -\n\r\t")
+    normalized = normalize("NFKC", s)
+    lowered = re.sub(r"[^\w\s-]", "", normalized.lower())
+    return re.sub(r"[-\s]+", "-", lowered).strip("-_")
 
 
 def _create_or_edit_countdown(title: str, target: date) -> CountDown:
@@ -91,6 +95,6 @@ def countdown(slug: str | None = None) -> Response:
 
     cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
     if not cd or cd.is_past:
-        return make_response(str(components.form(escape(slug))), 404)
+        return make_response(str(components.form(initial_title=escape(slug).capitalize())), 404)
 
     return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.astimezone(CET))))

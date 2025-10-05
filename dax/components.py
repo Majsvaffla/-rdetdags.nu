@@ -50,7 +50,7 @@ def form(initial_title: str | None = None) -> h.Element:
                         name="title",
                         required=True,
                         maxlength=100,
-                        value=initial_title.capitalize() if initial_title else None,
+                        value=initial_title,
                     ),
                     h.input(
                         type="datetime-local",
