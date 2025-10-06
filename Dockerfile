@@ -6,7 +6,7 @@ RUN pip install --upgrade pip
 
 FROM base AS ci
 
-WORKDIR /var/lib/ärdetdags
+WORKDIR /var/lib/dax
 
 COPY requirements.txt dist/
 COPY *.whl dist/
@@ -18,8 +18,8 @@ RUN rm dist/requirements.txt dist/*.whl
 
 FROM ci AS runtime
 
-ENV DIST_PATH=/var/lib/ärdetdags/dist
-ENV LOGS_PATH=/var/log/ärdetdags
+ENV DIST_PATH=/var/lib/dax/dist
+ENV LOGS_PATH=/var/log/dax
 
 VOLUME ${LOGS_PATH}
 
