@@ -57,11 +57,19 @@ def _slugify(s: str) -> str:
 
 def _create_or_edit_countdown(title: str, target: date) -> CountDown:
     slug = _slugify(title)
-    if (cd := CountDown.query.filter_by(slug=slug).first()) and cd.is_past:
+    cd = CountDown.query.filter_by(slug=slug).first()
+    if cd and cd.is_past:
         cd.date = target
         db.session.add(cd)
         db.session.commit()
         return cd  # type: ignore[no-any-return]
+
+    if cd and not cd.is_past:
+        # cd exists but still counts down, append suffix and create new one
+        suffix = 1
+        while CountDown.query.filter_by(slug=slug).first() is not None:
+            suffix += 1
+            slug = f"{slug}-{suffix}"
 
     new_cd = CountDown(title=title, slug=slug, date=target)
     db.session.add(new_cd)
