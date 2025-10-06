@@ -57,7 +57,7 @@ def form(initial_title: str | None = None) -> h.Element:
                         name="dt",
                         required=True,
                         # Explicitly use no time zone for formatting purposes.
-                        min=datetime.now(CET).astimezone(None).isoformat(timespec="seconds", sep=" "),
+                        min=datetime.now(CET).replace(tzinfo=None).isoformat(timespec="minutes", sep=" "),
                     ),
                 ],
                 h.input(type="submit", value="Dags?"),
