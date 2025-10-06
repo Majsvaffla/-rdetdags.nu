@@ -23,7 +23,7 @@ if dsn := os.environ.get("SENTRY_DSN"):
 app = Flask(__name__)
 
 # SQLite config
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////dax.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////var/lib/dax/dax.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
