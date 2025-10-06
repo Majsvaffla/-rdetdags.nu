@@ -81,7 +81,11 @@ def countdown(slug: str | None = None) -> Response:
         if not data or "title" not in data or "dt" not in data:
             return _make_bad_request_response()
 
-        target = datetime.fromisoformat(data["dt"]).replace(tzinfo=CET)
+        try:
+            target = datetime.fromisoformat(data["dt"]).replace(tzinfo=CET)
+        except ValueError:
+            return _make_bad_request_response()
+
         if target < datetime.now(CET):
             return _make_bad_request_response()
 
