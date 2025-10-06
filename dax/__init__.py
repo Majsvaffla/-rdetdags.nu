@@ -26,7 +26,6 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dax.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
-db.init_app(app)
 
 
 class CountDown(db.Model):  # type: ignore[name-defined]
