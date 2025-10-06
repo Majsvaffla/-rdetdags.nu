@@ -11,7 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from markupsafe import escape
 from werkzeug.wrappers import Response
 
-from . import components
+from . import components, recurring
 from .constants import CET
 
 if dsn := os.environ.get("SENTRY_DSN"):
@@ -86,7 +86,7 @@ def countdown(slug: str | None = None) -> Response:
         except ValueError:
             return _make_bad_request_response()
 
-        if target < datetime.now(CET):
+        if target < datetime.now(CET) or _slugify(data["title"]) in recurring.COUNTDOWNS:
             return _make_bad_request_response()
 
         cd = _create_or_edit_countdown(data["title"], target)
@@ -97,6 +97,16 @@ def countdown(slug: str | None = None) -> Response:
 
     if not slug:
         return make_response(str(components.form()))
+
+    if get_recurring_target := recurring.COUNTDOWNS.get(slug.lower()):
+        return make_response(
+            str(
+                components.countdown(
+                    heading=slug.capitalize(),
+                    target=get_recurring_target(),
+                )
+            )
+        )
 
     cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
     if not cd or cd.is_past:
