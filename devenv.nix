@@ -14,6 +14,10 @@
     };
   };
 
+  packages = [
+    pkgs.age
+  ];
+
   services.postgres = {
     enable = true;
     package = pkgs.postgresql_17;
