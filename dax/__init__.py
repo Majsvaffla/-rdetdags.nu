@@ -94,12 +94,16 @@ def countdown(slug: str | None = None) -> Response:
         except ValueError:
             return _make_bad_request_response()
 
-        if target < datetime.now(CET) or _slugify(data["title"]) in recurring.COUNTDOWNS:
+        if target < datetime.now(CET):
             return _make_bad_request_response()
 
-        cd = _create_or_edit_countdown(data["title"], target)
+        slug_for_redirect = (
+            recurring_slug
+            if (recurring_slug := _slugify(data["title"])) in recurring.COUNTDOWNS
+            else _create_or_edit_countdown(data["title"], target).slug
+        )
 
-        return redirect(urljoin(url_for("countdown"), cd.slug), code=301)
+        return redirect(urljoin(url_for("countdown"), slug_for_redirect), code=301)
 
     assert request.method == "GET"
 
