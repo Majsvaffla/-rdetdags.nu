@@ -27,6 +27,9 @@ def base_template(content: h.Element) -> h.Element:
                         font-size:0.8rem;
                         color: #4F4F4F;
                     }
+                    .hide-cursor {
+                        cursor: none;
+                    }
                     """)
             ],
         ],
@@ -154,6 +157,18 @@ def countdown(heading: str, target: datetime) -> h.Element:
                         }});
                     }};
                     document.addEventListener('DOMContentLoaded', initFlipDown);
+
+                    let hideTimeout;
+                    function resetCursorTimer() {{
+                    document.body.classList.remove('hide-cursor');
+                    clearTimeout(hideTimeout);
+                    hideTimeout = setTimeout(() => {{
+                        document.body.classList.add('hide-cursor');
+                    }}, 2000);
+                    }}
+                    document.addEventListener('mousemove', resetCursorTimer);
+                    resetCursorTimer(); // start timer immediately
+
                 """
                 )
             ],
