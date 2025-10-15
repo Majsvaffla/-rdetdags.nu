@@ -8,7 +8,7 @@ from .constants import CET
 
 
 def base_template(content: h.Element) -> h.Element:
-    return h.html(data_theme="light")[
+    return h.html(data_theme="dark")[
         h.head[
             h.title["Är det dags nu?"],
             h.meta(name="viewport", content="width=device-width,initial-scale=1"),
@@ -33,6 +33,40 @@ def base_template(content: h.Element) -> h.Element:
         h.body[
             h.main(".container", style="min-height:100vh; display:grid; place-items:center")[
                 h.article(style="max-width:800px; margin: auto")[content],
+            ],
+            h.button(
+                "#theme-toggle",
+                style=(
+                    "position:absolute;top:0.5rem;left:0.5rem;"
+                    "background-color:transparent;border:none;box-shadow: none;"
+                ),
+            )["🌙"],
+            h.script[
+                Markup(
+                    """
+                    const root = document.documentElement;
+                    const button = document.getElementById("theme-toggle");
+
+                    const savedTheme = localStorage.getItem("theme");
+                    if (savedTheme) {{
+                    root.setAttribute("data-theme", savedTheme);
+                    }}
+
+                    const updateIcon = () => {{
+                    const theme = root.getAttribute("data-theme");
+                    button.textContent = theme === "dark" ? "☀️" : "🌙";
+                    }};
+                    updateIcon();
+
+                    button.addEventListener("click", () => {{
+                    const current = root.getAttribute("data-theme");
+                    const newTheme = current === "dark" ? "light" : "dark";
+                    root.setAttribute("data-theme", newTheme);
+                    localStorage.setItem("theme", newTheme);
+                    updateIcon();
+                    }});
+                """
+                )
             ],
         ],
     ]
@@ -89,7 +123,7 @@ def countdown(heading: str, target: datetime) -> h.Element:
                         // Set up FlipDown
                         const flipdown = new FlipDown(
                             twoDaysFromNow,
-                           {{headings: ["Dagar", "Timmar", "Minuter", "Sekunder"]}},
+                           {{headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light"}},
                         ).start().ifEnded(() => {{
                             setTimeout(() => window.location.reload(), 2000);
                         }});
