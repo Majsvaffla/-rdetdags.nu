@@ -34,13 +34,17 @@ def base_template(content: h.Element) -> h.Element:
             h.main(".container", style="min-height:100vh; display:grid; place-items:center")[
                 h.article(style="max-width:800px; margin: auto")[content],
             ],
-            h.button(
-                "#theme-toggle",
-                style=(
-                    "position:absolute;top:0.5rem;left:0.5rem;"
-                    "background-color:transparent;border:none;box-shadow: none;"
-                ),
-            )["🌙"],
+            h.div(style="position:absolute;top:0.5rem;left:0.5rem;")[
+                h.button(
+                    "#theme-toggle",
+                    style="background-color:transparent;border:none;box-shadow: none;",
+                )["🌙"],
+                h.button(
+                    "#fullscreen",
+                    style="background-color:transparent;border:none;box-shadow: none;",
+                    onClick="toggleFullScreen()",
+                )["🖥️"],
+            ],
             h.script[
                 Markup(
                     """
@@ -65,6 +69,27 @@ def base_template(content: h.Element) -> h.Element:
                     localStorage.setItem("theme", newTheme);
                     updateIcon();
                     }});
+
+                    function toggleFullScreen() {
+                        if ((document.fullScreenElement && document.fullScreenElement !== null) ||
+                        (!document.mozFullScreen && !document.webkitIsFullScreen)) {
+                            if (document.documentElement.requestFullScreen) {
+                                document.documentElement.requestFullScreen();
+                            } else if (document.documentElement.mozRequestFullScreen) {
+                                document.documentElement.mozRequestFullScreen();
+                            } else if (document.documentElement.webkitRequestFullScreen) {
+                                document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+                            }
+                        } else {
+                            if (document.cancelFullScreen) {
+                                document.cancelFullScreen();
+                            } else if (document.mozCancelFullScreen) {
+                                document.mozCancelFullScreen();
+                            } else if (document.webkitCancelFullScreen) {
+                                document.webkitCancelFullScreen();
+                            }
+                        }
+                    }
                 """
                 )
             ],
