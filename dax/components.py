@@ -20,6 +20,12 @@ def base_template(content: h.Element) -> h.Element:
                 Markup("""
                     .flipdown {
                         width:100%;
+                        display: flex !important;
+                        flex-wrap: nowrap !important;
+                        justify-content: center;
+                        align-items: center;
+                        width: 100%;
+                        transform-origin: center;
                     }
                     .flipdown .rotor-group .rotor-group-heading::before {
                         font-weight:normal;
@@ -30,6 +36,29 @@ def base_template(content: h.Element) -> h.Element:
                     .hide-cursor {
                         cursor: none;
                     }
+                    .flipdown .rotor-group {
+                        flex: 0 0 auto !important;
+                    }
+                    @media (max-width: 900px) {
+                        .flipdown {
+                            transform: scale(0.9);
+                        }
+                    }
+                    @media (max-width: 700px) {
+                        .flipdown {
+                            transform: scale(0.8);
+                        }
+                    }
+                    @media (max-width: 500px) {
+                        .flipdown {
+                            transform: scale(0.8);
+                        }
+                    }
+                    .custom-btn {
+                       background-color:transparent;
+                       border:none;
+                       box-shadow: none;
+                    }
                     """)
             ],
         ],
@@ -39,12 +68,10 @@ def base_template(content: h.Element) -> h.Element:
             ],
             h.div(style="position:absolute;top:0.5rem;left:0.5rem;")[
                 h.button(
-                    "#theme-toggle",
-                    style="background-color:transparent;border:none;box-shadow: none;",
+                    "#theme-toggle.custom-btn",
                 )["🌙"],
                 h.button(
-                    "#fullscreen",
-                    style="background-color:transparent;border:none;box-shadow: none;",
+                    "#fullscreen.custom-btn",
                     onClick="toggleFullScreen()",
                 )["🖥️"],
             ],
