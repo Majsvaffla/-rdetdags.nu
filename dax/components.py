@@ -55,9 +55,15 @@ def base_template(content: h.Element) -> h.Element:
                         }
                     }
                     .custom-btn {
-                       background-color:transparent;
-                       border:none;
-                       box-shadow: none;
+                        background-color:transparent;
+                        border:none;
+                        box-shadow: none;
+                    }
+                    .target-date {
+                        text-align:center;
+                        margin-top:1rem;
+                        font-size:0.8rem;
+                        opacity: 0.8;
                     }
                     """)
             ],
@@ -168,6 +174,7 @@ def countdown(heading: str, target: datetime) -> h.Element:
         h.div[
             h.h1[heading],
             h.div("#flipdown.flipdown"),
+            h.div(".target-date")[h.i[target.strftime("%Y-%m-%d %H:%M")]],
             h.script[
                 Markup(
                     f"""
