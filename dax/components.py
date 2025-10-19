@@ -54,10 +54,28 @@ def base_template(content: h.Element) -> h.Element:
                             transform: scale(0.8);
                         }
                     }
+                    .countdown-container {
+                       min-height:100vh;
+                       display:grid;
+                       place-items: center;
+                    }
+                    .countdown-content {
+                       max-width:800px;
+                       margin: auto;
+                    }
+                    .countdown-menu {
+                       position:absolute;
+                       top:0.5rem;
+                       left:0.5rem;
+                    }
                     .custom-btn {
                         background-color:transparent;
                         border:none;
                         box-shadow: none;
+                       filter: grayscale(100%);
+                    }
+                    .custom-btn:hover {
+                       filter: grayscale(0%);
                     }
                     .target-date {
                         text-align:center;
@@ -69,17 +87,25 @@ def base_template(content: h.Element) -> h.Element:
             ],
         ],
         h.body[
-            h.main(".container", style="min-height:100vh; display:grid; place-items:center")[
-                h.article(style="max-width:800px; margin: auto")[content],
-            ],
-            h.div(style="position:absolute;top:0.5rem;left:0.5rem;")[
+            h.main(".container.countdown-container")[h.article(".countdown-content")[content],],
+            h.div(".countdown-menu")[
                 h.button(
                     "#theme-toggle.custom-btn",
+                    data_tooltip="Byt tema",
+                    data_placement="bottom",
                 )["🌙"],
                 h.button(
                     "#fullscreen.custom-btn",
                     onClick="toggleFullScreen()",
+                    data_tooltip="Fullskärm",
+                    data_placement="bottom",
                 )["🖥️"],
+                h.button(
+                    "#fullscreen.custom-btn",
+                    onClick="copyURL()",
+                    data_tooltip="Kopiera URL",
+                    data_placement="bottom",
+                )["📋"],
             ],
             h.script[
                 Markup(
@@ -126,6 +152,15 @@ def base_template(content: h.Element) -> h.Element:
                             }
                         }
                     }
+
+                    function copyURL() {
+                    navigator.clipboard.writeText(window.location.href)
+                        .then(() => {})
+                        .catch(err => {
+                        console.error("Failed to copy: ", err);
+                        });
+                    }
+
                 """
                 )
             ],
