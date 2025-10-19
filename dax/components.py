@@ -163,7 +163,7 @@ def base_template(content: h.Element, is_countdown_page: bool = False) -> h.Elem
                         step="1",
                         onInput="updateLepp(this.value)",
                     ),
-                    h.button(onClick="setLepp()")["Lägg till"],
+                    h.button(onClick="setLepp()")["Leppa tiden"],
                 ],
             ],
             h.script[
