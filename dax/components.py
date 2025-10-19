@@ -7,7 +7,7 @@ from markupsafe import Markup
 from .constants import CET
 
 
-def base_template(content: h.Element) -> h.Element:
+def base_template(content: h.Element, is_countdown_page: bool = False) -> h.Element:
     return h.html(data_theme="dark")[
         h.head[
             h.title["Är det dags nu?"],
@@ -68,6 +68,38 @@ def base_template(content: h.Element) -> h.Element:
                        top:0.5rem;
                        left:0.5rem;
                     }
+                    .lepp-container {
+                        display: none;
+                        position: absolute;
+                        top: 0.5rem;
+                        left: 0.5rem;
+                        background: var(--pico-background-color);
+                        padding: 1rem;
+                        border-radius: 0.5rem;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        min-width: 250px;
+                    }
+                    .lepp-container.show {
+                        display: block;
+                    }
+                    .lepp-controls {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+                    .lepp-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 0.5rem;
+                    }
+                    .close-btn {
+                        background: none;
+                        border: none;
+                        font-size: 1.2rem;
+                        cursor: pointer;
+                        padding: 0;
+                    }
                     .custom-btn {
                         background-color:transparent;
                         border:none;
@@ -100,12 +132,39 @@ def base_template(content: h.Element) -> h.Element:
                     data_tooltip="Fullskärm",
                     data_placement="bottom",
                 )["🖥️"],
-                h.button(
+                is_countdown_page
+                and h.button(
                     "#fullscreen.custom-btn",
                     onClick="copyURL()",
                     data_tooltip="Kopiera URL",
                     data_placement="bottom",
                 )["📋"],
+                is_countdown_page
+                and h.button(
+                    "#time-adjust-toggle.custom-btn",
+                    onClick="toggleLepp()",
+                    data_tooltip="Lepptid",
+                    data_placement="bottom",
+                )["🏃"],
+            ],
+            h.div("#lepp-panel.lepp-container")[
+                h.div(".lepp-header")[
+                    h.strong["Hur mycket Lepp?"],
+                    h.button(".close-btn", onClick="toggleLepp()")["×"],
+                ],
+                h.div(".lepp-controls")[
+                    h.label(For="lepp-range")[h.span("#lepp-mins")["0"], " minuter"],
+                    h.input(
+                        type="range",
+                        id="lepp-range",
+                        min="0",
+                        max="120",
+                        value="0",
+                        step="1",
+                        onInput="updateLepp(this.value)",
+                    ),
+                    h.button(onClick="setLepp()")["Lägg till"],
+                ],
             ],
             h.script[
                 Markup(
@@ -161,6 +220,15 @@ def base_template(content: h.Element) -> h.Element:
                         });
                     }
 
+                    function toggleLepp() {
+                        const panel = document.getElementById('lepp-panel');
+                        panel.classList.toggle('show');
+                    }
+
+                    function updateLepp(value) {
+                        document.getElementById('lepp-mins').textContent = value;
+                    }
+
                 """
                 )
             ],
@@ -213,12 +281,15 @@ def countdown(heading: str, target: datetime) -> h.Element:
             h.script[
                 Markup(
                     f"""
+                    let currentFlipDown = null;
+                    let currentTargetTime = {int(target.timestamp())};
+
                     function initFlipDown() {{
                         // Unix timestamp (in seconds) to count down to
-                        const twoDaysFromNow = {int(target.timestamp())};
+                        const twoDaysFromNow = currentTargetTime;
 
                         // Set up FlipDown
-                        const flipdown = new FlipDown(
+                        currentFlipDown = new FlipDown(
                             twoDaysFromNow,
                            {{headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light"}},
                         ).start().ifEnded(() => {{
@@ -226,6 +297,28 @@ def countdown(heading: str, target: datetime) -> h.Element:
                         }});
                     }};
                     document.addEventListener('DOMContentLoaded', initFlipDown);
+
+                    function setLepp() {{
+                        const leppMinutes = parseInt(document.getElementById('lepp-range').value);
+                        if (leppMinutes > 0) {{
+                            currentTargetTime -= (leppMinutes * 60);
+
+                            document.getElementById('lepp-range').value = 0;
+                            document.getElementById('lepp-mins').textContent = '0';
+
+                            document.getElementById('lepp-panel').classList.remove('show');
+
+                            const container = document.getElementById('flipdown');
+                            container.innerHTML = '';
+
+                            currentFlipDown = new FlipDown(
+                                currentTargetTime,
+                                {{headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light"}},
+                            ).start().ifEnded(() => {{
+                                setTimeout(() => window.location.reload(), 2000);
+                            }});
+                        }}
+                    }}
 
                     let hideTimeout;
                     function resetCursorTimer() {{
@@ -241,5 +334,6 @@ def countdown(heading: str, target: datetime) -> h.Element:
                 """
                 )
             ],
-        ]
+        ],
+        is_countdown_page=True,
     )
