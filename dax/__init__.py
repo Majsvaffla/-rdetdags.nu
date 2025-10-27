@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -10,16 +12,20 @@ import sentry_sdk
 from flask import Flask, make_response, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from markupsafe import escape
-from werkzeug.wrappers import Response
 
 from . import components, recurring
 from .constants import CET
 
 if TYPE_CHECKING:
+    from werkzeug.wrappers import Response
 
-    class CountDownData(TypedDict):
+    class CountDownAPIData(TypedDict):
         title: str
         timestamp: str
+
+    class CountDownUIData(TypedDict):
+        heading: str
+        target: datetime
 
 
 if dsn := os.environ.get("SENTRY_DSN"):
@@ -89,8 +95,23 @@ def _make_bad_request_response() -> Response:
     return make_response("Formuläret är inte korrekt ifyllt.", 400)
 
 
+def _get_countdown_data(slug: str) -> CountDownUIData | None:
+    if get_recurring_target := recurring.COUNTDOWNS.get(slug.lower()):
+        return {
+            "heading": slug.capitalize(),
+            "target": get_recurring_target(),
+        }
+
+    cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
+    if not cd or cd.is_past:
+        return None
+
+    return {"heading": escape(cd.title), "target": cd.date.replace(tzinfo=CET)}
+
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/<slug>", methods=["GET"])
+@app.route("/<slug>/", methods=["GET"])
 def countdown(slug: str | None = None) -> Response:
     if request.method == "POST":
         data = request.form
@@ -116,32 +137,21 @@ def countdown(slug: str | None = None) -> Response:
     assert request.method == "GET"
 
     if not slug:
-        return make_response(str(components.form()))
+        return make_response(str(components.form_page()))
 
-    if get_recurring_target := recurring.COUNTDOWNS.get(slug.lower()):
-        return make_response(
-            str(
-                components.countdown(
-                    heading=slug.capitalize(),
-                    target=get_recurring_target(),
-                )
-            )
-        )
-
-    cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
-    if not cd or cd.is_past:
-        return make_response(str(components.form(initial_title=escape(slug).capitalize())), 404)
-
-    return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.replace(tzinfo=CET))))
+    cd = _get_countdown_data(slug)
+    if not cd:
+        return make_response(str(components.form_page(initial_title=escape(slug).capitalize())), 404)
+    return make_response(str(components.countdown_page(**cd)))
 
 
-def _make_json_response(data: CountDownData | None, status_code: int) -> Response:
+def _make_json_response(data: CountDownAPIData | None, status_code: int) -> Response:
     response = make_response("" if data is None else json.dumps(data), status_code)
     response.headers["Content-Type"] = "application/json"
     return response
 
 
-def _get_serialized_countdown(slug: str) -> CountDownData | None:
+def _get_serialized_countdown(slug: str) -> CountDownAPIData | None:
     if get_recurring_target := recurring.COUNTDOWNS.get(slug.lower()):
         return {"title": slug.capitalize(), "timestamp": get_recurring_target().isoformat()}
 

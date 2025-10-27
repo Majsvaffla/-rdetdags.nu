@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import htpy as h
 from flask import url_for
@@ -6,8 +9,11 @@ from markupsafe import Markup
 
 from .constants import CET
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
-def base_template(content: h.Element, is_countdown_page: bool = False) -> h.Element:
+
+def base_template(content: h.Element, extra_actions: Iterable[h.Element] | None = None) -> h.Element:
     return h.html(data_theme="dark")[
         h.head[
             h.title["Är det dags nu?"],
@@ -119,8 +125,7 @@ def base_template(content: h.Element, is_countdown_page: bool = False) -> h.Elem
             ],
         ],
         h.body[
-            h.main(".container.countdown-container")[h.article(".countdown-content")[content],],
-            h.div(".countdown-menu")[
+            h.div[
                 h.button(
                     "#theme-toggle.custom-btn",
                     data_tooltip="Byt tema",
@@ -132,21 +137,9 @@ def base_template(content: h.Element, is_countdown_page: bool = False) -> h.Elem
                     data_tooltip="Fullskärm",
                     data_placement="bottom",
                 )["🖥️"],
-                is_countdown_page
-                and h.button(
-                    "#fullscreen.custom-btn",
-                    onClick="copyURL()",
-                    data_tooltip="Kopiera URL",
-                    data_placement="bottom",
-                )["📋"],
-                is_countdown_page
-                and h.button(
-                    "#time-adjust-toggle.custom-btn",
-                    onClick="toggleLepp()",
-                    data_tooltip="Lepptid",
-                    data_placement="bottom",
-                )["🏃"],
+                extra_actions,
             ],
+            h.main(".container.countdown-container")[content],
             h.div("#lepp-panel.lepp-container")[
                 h.div(".lepp-header")[
                     h.strong["Hur mycket Lepp?"],
@@ -236,7 +229,25 @@ def base_template(content: h.Element, is_countdown_page: bool = False) -> h.Elem
     ]
 
 
-def form(initial_title: str | None = None) -> h.Element:
+def copy_url_button() -> h.Element:
+    return h.button(
+        "#fullscreen.custom-btn",
+        onClick="copyURL()",
+        data_tooltip="Kopiera URL",
+        data_placement="bottom",
+    )["📋"]
+
+
+def toggle_lepp_button() -> h.Element:
+    return h.button(
+        "#time-adjust-toggle.custom-btn",
+        onClick="toggleLepp()",
+        data_tooltip="Lepptid",
+        data_placement="bottom",
+    )["🏃"]
+
+
+def form_page(initial_title: str | None = None) -> h.Element:
     return base_template(
         h.div[
             h.h1["När är det dags?"],
@@ -265,22 +276,13 @@ def form(initial_title: str | None = None) -> h.Element:
 
 
 def countdown(heading: str, target: datetime) -> h.Element:
-    if target <= datetime.now(CET):
-        return base_template(
-            h.div[
-                h.h1[heading],
-                h.p["Det är dags!"],
-                h.img(src=f"{url_for('static', filename='done.png')}"),
-            ]
-        )
-    return base_template(
-        h.div[
-            h.h1[heading],
-            h.div("#flipdown.flipdown"),
-            h.div(".target-date")[h.i[target.strftime("%Y-%m-%d %H:%M")]],
-            h.script[
-                Markup(
-                    f"""
+    return h.article(".countdown-content")[
+        h.h1[heading],
+        h.div("#flipdown.flipdown"),
+        h.div(".target-date")[h.i[target.strftime("%Y-%m-%d %H:%M")]],
+        h.script[
+            Markup(
+                f"""
                     let currentFlipDown = null;
                     let currentTargetTime = {int(target.timestamp())};
 
@@ -332,8 +334,21 @@ def countdown(heading: str, target: datetime) -> h.Element:
                     resetCursorTimer(); // start timer immediately
 
                 """
-                )
-            ],
+            )
         ],
-        is_countdown_page=True,
+    ]
+
+
+def countdown_page(heading: str, target: datetime) -> h.Element:
+    if target <= datetime.now(CET):
+        return base_template(
+            h.div[
+                h.h1[heading],
+                h.p["Det är dags!"],
+                h.img(src=f"{url_for('static', filename='done.png')}"),
+            ]
+        )
+    return base_template(
+        countdown(heading, target),
+        extra_actions=[copy_url_button(), toggle_lepp_button()],
     )
