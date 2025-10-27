@@ -84,4 +84,5 @@ warn_unused_ignores = true
 dev = [
   "mypy",
   "pytest",
+  "time-machine>=2.19.0",
 ]
