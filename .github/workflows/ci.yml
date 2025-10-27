@@ -9,10 +9,10 @@ on:
     types:
       - completed
 jobs:
-  pylint:
+  linting:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }}
+      image: ghcr.io/majsvaffla/dax:${{ github.sha }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GHCR_PASSWORD }}
@@ -20,55 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: pylint
-        run: pylint ärdetdags --score no
+      - name: ruff check
+        run: ruff check
 
-  black:
+      - name: ruff format
+        run: ruff format --check
+
+  testing:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_PASSWORD }}
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: black
-        run: black --check ärdetdags
-
-  safety:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_PASSWORD }}
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: safety check
-        run: safety check
-
-  audit:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_PASSWORD }}
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: npm audit
-        run: npm audit
-
-  pytest:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/majsvaffla/ärdetdags:${{ github.sha }}
+      image: ghcr.io/majsvaffla/dax:${{ github.sha }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GHCR_PASSWORD }}
