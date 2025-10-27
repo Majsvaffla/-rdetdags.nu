@@ -2,6 +2,7 @@ import json
 import os
 import re
 from datetime import date, datetime, timedelta
+from typing import TYPE_CHECKING, TypedDict
 from unicodedata import normalize
 from urllib.parse import urljoin
 
@@ -13,6 +14,13 @@ from werkzeug.wrappers import Response
 
 from . import components, recurring
 from .constants import CET
+
+if TYPE_CHECKING:
+
+    class CountDownData(TypedDict):
+        title: str
+        timestamp: str
+
 
 if dsn := os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(
@@ -127,15 +135,24 @@ def countdown(slug: str | None = None) -> Response:
     return make_response(str(components.countdown(heading=escape(cd.title), target=cd.date.replace(tzinfo=CET))))
 
 
-def _make_json_response(data: dict | None, status_code: int) -> Response:
+def _make_json_response(data: CountDownData | None, status_code: int) -> Response:
     response = make_response("" if data is None else json.dumps(data), status_code)
     response.headers["Content-Type"] = "application/json"
     return response
 
 
+def _get_serialized_countdown(slug: str) -> CountDownData | None:
+    if get_recurring_target := recurring.COUNTDOWNS.get(slug.lower()):
+        return {"title": slug.capitalize(), "timestamp": get_recurring_target().isoformat()}
+
+    if cd := CountDown.query.filter_by(slug=_slugify(slug)).first():
+        return {"title": cd.title, "timestamp": cd.date.replace(tzinfo=CET).isoformat()}
+    return None
+
+
 @app.route("/api/countdown/<slug>", methods=["GET"])
 def api_countdown(slug: str) -> Response:
-    cd = CountDown.query.filter_by(slug=_slugify(slug)).first()
+    cd = _get_serialized_countdown(slug)
     if not cd:
         return _make_json_response(None, 404)
-    return _make_json_response({"title": cd.title, "timestamp": cd.date.replace(tzinfo=CET).isoformat()}, 200)
+    return _make_json_response(cd, 200)
