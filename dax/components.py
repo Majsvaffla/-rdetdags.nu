@@ -22,6 +22,8 @@ def base_template(content: h.Element, extra_actions: Iterable[h.Element] | None 
             h.link(href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css", rel="stylesheet"),
             h.script(src="https://pbutcher.uk/flipdown/js/flipdown/flipdown.js"),
             h.link(href="https://pbutcher.uk/flipdown/css/flipdown/flipdown.css", rel="stylesheet"),
+            h.script(src=url_for("static", filename="base.js")),
+            h.script(src=url_for("static", filename="countdown.js")),
             h.style[
                 Markup("""
                     .flipdown {
@@ -159,72 +161,6 @@ def base_template(content: h.Element, extra_actions: Iterable[h.Element] | None 
                     h.button(onClick="setLepp()")["Leppa tiden"],
                 ],
             ],
-            h.script[
-                Markup(
-                    """
-                    const root = document.documentElement;
-                    const button = document.getElementById("theme-toggle");
-
-                    const savedTheme = localStorage.getItem("theme");
-                    if (savedTheme) {{
-                    root.setAttribute("data-theme", savedTheme);
-                    }}
-
-                    const updateIcon = () => {{
-                    const theme = root.getAttribute("data-theme");
-                    button.textContent = theme === "dark" ? "☀️" : "🌙";
-                    }};
-                    updateIcon();
-
-                    button.addEventListener("click", () => {{
-                    const current = root.getAttribute("data-theme");
-                    const newTheme = current === "dark" ? "light" : "dark";
-                    root.setAttribute("data-theme", newTheme);
-                    localStorage.setItem("theme", newTheme);
-                    updateIcon();
-                    }});
-
-                    function toggleFullScreen() {
-                        if ((document.fullScreenElement && document.fullScreenElement !== null) ||
-                        (!document.mozFullScreen && !document.webkitIsFullScreen)) {
-                            if (document.documentElement.requestFullScreen) {
-                                document.documentElement.requestFullScreen();
-                            } else if (document.documentElement.mozRequestFullScreen) {
-                                document.documentElement.mozRequestFullScreen();
-                            } else if (document.documentElement.webkitRequestFullScreen) {
-                                document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-                            }
-                        } else {
-                            if (document.cancelFullScreen) {
-                                document.cancelFullScreen();
-                            } else if (document.mozCancelFullScreen) {
-                                document.mozCancelFullScreen();
-                            } else if (document.webkitCancelFullScreen) {
-                                document.webkitCancelFullScreen();
-                            }
-                        }
-                    }
-
-                    function copyURL() {
-                    navigator.clipboard.writeText(window.location.href)
-                        .then(() => {})
-                        .catch(err => {
-                        console.error("Failed to copy: ", err);
-                        });
-                    }
-
-                    function toggleLepp() {
-                        const panel = document.getElementById('lepp-panel');
-                        panel.classList.toggle('show');
-                    }
-
-                    function updateLepp(value) {
-                        document.getElementById('lepp-mins').textContent = value;
-                    }
-
-                """
-                )
-            ],
         ],
     ]
 
@@ -278,64 +214,8 @@ def form_page(initial_title: str | None = None) -> h.Element:
 def countdown(heading: str, target: datetime) -> h.Element:
     return h.article(".countdown-content")[
         h.h1[heading],
-        h.div("#flipdown.flipdown"),
+        h.div("#flipdown.flipdown", data_target=int(target.timestamp())),
         h.div(".target-date")[h.i[target.strftime("%Y-%m-%d %H:%M")]],
-        h.script[
-            Markup(
-                f"""
-                    let currentFlipDown = null;
-                    let currentTargetTime = {int(target.timestamp())};
-
-                    function initFlipDown() {{
-                        // Unix timestamp (in seconds) to count down to
-                        const twoDaysFromNow = currentTargetTime;
-
-                        // Set up FlipDown
-                        currentFlipDown = new FlipDown(
-                            twoDaysFromNow,
-                           {{headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light"}},
-                        ).start().ifEnded(() => {{
-                            setTimeout(() => window.location.reload(), 2000);
-                        }});
-                    }};
-                    document.addEventListener('DOMContentLoaded', initFlipDown);
-
-                    function setLepp() {{
-                        const leppMinutes = parseInt(document.getElementById('lepp-range').value);
-                        if (leppMinutes > 0) {{
-                            currentTargetTime -= (leppMinutes * 60);
-
-                            document.getElementById('lepp-range').value = 0;
-                            document.getElementById('lepp-mins').textContent = '0';
-
-                            document.getElementById('lepp-panel').classList.remove('show');
-
-                            const container = document.getElementById('flipdown');
-                            container.innerHTML = '';
-
-                            currentFlipDown = new FlipDown(
-                                currentTargetTime,
-                                {{headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light"}},
-                            ).start().ifEnded(() => {{
-                                setTimeout(() => window.location.reload(), 2000);
-                            }});
-                        }}
-                    }}
-
-                    let hideTimeout;
-                    function resetCursorTimer() {{
-                    document.body.classList.remove('hide-cursor');
-                    clearTimeout(hideTimeout);
-                    hideTimeout = setTimeout(() => {{
-                        document.body.classList.add('hide-cursor');
-                    }}, 2000);
-                    }}
-                    document.addEventListener('mousemove', resetCursorTimer);
-                    resetCursorTimer(); // start timer immediately
-
-                """
-            )
-        ],
     ]
 
 
