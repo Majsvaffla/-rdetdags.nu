@@ -17,16 +17,6 @@
     pkgs.age
   ];
 
-  services.postgres = {
-    enable = true;
-    package = pkgs.postgresql_17;
-    initialDatabases = [
-      {
-        name = "ärdetdags";
-      }
-    ];
-  };
-
   git-hooks.hooks = {
     shellcheck = {
       enable = true;
