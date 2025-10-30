@@ -1,9 +1,8 @@
-{
-  pkgs,
-  lib,
-  config,
-  inputs,
-  ...
+{ pkgs
+, lib
+, config
+, inputs
+, ...
 }: {
   languages.python = {
     enable = true;
@@ -33,7 +32,7 @@
       enable = true;
       files = "bin";
     };
-    alejandra.enable = true;
+    nixpkgs-fmt.enable = true;
     mypy = {
       enable = true;
       entry = ".devenv/state/venv/bin/mypy";
