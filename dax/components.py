@@ -5,15 +5,16 @@ from typing import TYPE_CHECKING
 
 import htpy as h
 from flask import url_for
-from markupsafe import Markup
 
 from .constants import CET
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from dax import CountDownUIData
 
-def base_template(content: h.Element, extra_actions: Iterable[h.Element] | None = None) -> h.Element:
+
+def base_template(content: h.Node, extra_actions: Iterable[h.Node] | None = None) -> h.Element:
     return h.html(data_theme="dark")[
         h.head[
             h.title["Är det dags nu?"],
@@ -27,7 +28,7 @@ def base_template(content: h.Element, extra_actions: Iterable[h.Element] | None 
             h.link(href=url_for("static", filename="base.css"), rel="stylesheet"),
         ],
         h.body[
-            h.div[
+            h.header[
                 h.button(
                     "#theme-toggle.custom-btn",
                     data_tooltip="Byt tema",
@@ -40,27 +41,27 @@ def base_template(content: h.Element, extra_actions: Iterable[h.Element] | None 
                     data_placement="bottom",
                 )["🖥️"],
                 extra_actions,
-            ],
-            h.main(".container.countdown-container")[content],
-            h.div("#lepp-panel.lepp-container")[
-                h.div(".lepp-header")[
-                    h.strong["Hur mycket Lepp?"],
-                    h.button(".close-btn", onClick="toggleLepp()")["×"],
+                h.div("#lepp-panel.lepp-container")[
+                    h.div(".lepp-header")[
+                        h.strong["Hur mycket Lepp?"],
+                        h.button(".close-btn", onClick="toggleLepp()")["×"],
+                    ],
+                    h.div(".lepp-controls")[
+                        h.label(For="lepp-range")[h.span("#lepp-mins")["0"], " minuter"],
+                        h.input(
+                            type="range",
+                            id="lepp-range",
+                            min="0",
+                            max="120",
+                            value="0",
+                            step="1",
+                            onInput="updateLepp(this.value)",
+                        ),
+                        h.button(onClick="setLepp()")["Leppa tiden"],
+                    ],
                 ],
-                h.div(".lepp-controls")[
-                    h.label(For="lepp-range")[h.span("#lepp-mins")["0"], " minuter"],
-                    h.input(
-                        type="range",
-                        id="lepp-range",
-                        min="0",
-                        max="120",
-                        value="0",
-                        step="1",
-                        onInput="updateLepp(this.value)",
-                    ),
-                    h.button(onClick="setLepp()")["Leppa tiden"],
-                ],
             ],
+            h.main[h.div(".container.countdown-container")[content]],
         ],
     ]
 
@@ -111,10 +112,10 @@ def form_page(initial_title: str | None = None) -> h.Element:
     )
 
 
-def countdown(heading: str, target: datetime) -> h.Element:
+def countdown(heading: str, target: datetime, id: int = 1) -> h.Element:
     return h.article(".countdown-content")[
         h.h1[heading],
-        h.div("#flipdown.flipdown", data_target=int(target.timestamp())),
+        h.div(f"#flipdown_{id}.flipdown", data_target=int(target.timestamp())),
         h.div(".target-date")[h.i[target.strftime("%Y-%m-%d %H:%M")]],
     ]
 
@@ -130,5 +131,12 @@ def countdown_page(heading: str, target: datetime) -> h.Element:
         )
     return base_template(
         countdown(heading, target),
-        extra_actions=[copy_url_button(), toggle_lepp_button()],
+        extra_actions=[copy_url_button, toggle_lepp_button],
+    )
+
+
+def countdowns_page(countdowns: Iterable[CountDownUIData]) -> h.Element:
+    return base_template(
+        (countdown(**cd, id=n) for n, cd in enumerate(countdowns, start=1)),
+        extra_actions=[copy_url_button, toggle_lepp_button],
     )

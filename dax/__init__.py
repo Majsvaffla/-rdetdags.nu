@@ -145,6 +145,15 @@ def countdown(slug: str | None = None) -> Response:
     return make_response(str(components.countdown_page(**cd)))
 
 
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+@app.route("/<path:path>/")
+def countdown_grid(path: str) -> Response:
+    return make_response(
+        str(components.countdowns_page(cd for slug in path.split("/") if (cd := _get_countdown_data(slug))))
+    )
+
+
 def _make_json_response(data: CountDownAPIData | None, status_code: int) -> Response:
     response = make_response("" if data is None else json.dumps(data), status_code)
     response.headers["Content-Type"] = "application/json"

@@ -1,43 +1,37 @@
-let currentFlipDown
-let currentTargetTime
+const currentFlipDowns = []
 
-function initFlipDown() {
-    const container = document.getElementById("flipdown")
-    if (!container) {
-        return
-    }
-    // Unix timestamp (in seconds) to count down to
-    currentTargetTime = Number.parseInt(container.dataset.target)
-
-    // Set up FlipDown
-    currentFlipDown = new FlipDown(
-        currentTargetTime,
+function initFlipDown(containerId, targetTime, leppMinutes) {
+    return new FlipDown(
+        targetTime - leppMinutes * 60,
+        containerId,
         { headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light" },
     ).start().ifEnded(() => {
         setTimeout(() => window.location.reload(), 2000)
     })
 }
 
-document.addEventListener("DOMContentLoaded", initFlipDown)
+function initFlipDowns(leppMinutes = 0) {
+    const containers = document.getElementsByClassName("flipdown")
+    for (const container of containers) {
+        container.innerHTML = "";
+        currentFlipDowns.push(initFlipDown(container.id, parseInt(container.dataset.target), leppMinutes))
+    }
+}
 
 window.setLepp = function () {
-    const leppMinutes = parseInt(document.getElementById("lepp-range").value)
+    const rangeInput = document.getElementById("lepp-range")
+    if (!rangeInput) {
+        return
+    }
+    const leppMinutes = parseInt(rangeInput.value)
     if (leppMinutes > 0) {
-        currentTargetTime -= (leppMinutes * 60)
-
-        document.getElementById("lepp-range").value = 0
+        rangeInput.value = 0
         document.getElementById("lepp-mins").textContent = "0"
         document.getElementById("lepp-panel").classList.remove("show")
-
-        const container = document.getElementById("flipdown")
-        container.innerHTML = ""
-
-        currentFlipDown = new FlipDown(
-            currentTargetTime,
-            { headings: ["Dagar", "Timmar", "Minuter", "Sekunder"], theme: "light" },
-        ).start().ifEnded(() => {
-            setTimeout(() => window.location.reload(), 2000)
-        })
+        while (currentFlipDowns.length > 0) {
+            currentFlipDowns.pop()
+        }
+        initFlipDowns(leppMinutes)
     }
 }
 
@@ -46,11 +40,10 @@ function resetCursorTimer() {
     document.body.classList.remove("hide-cursor")
     clearTimeout(hideTimeout)
     hideTimeout = setTimeout(() => {
-        {
-            document.body.classList.add("hide-cursor")
-        }
+        document.body.classList.add("hide-cursor")
     }, 2000)
 }
 
 document.addEventListener("mousemove", resetCursorTimer)
 document.addEventListener("DOMContentLoaded", resetCursorTimer)
+document.addEventListener("DOMContentLoaded", () => initFlipDowns())
