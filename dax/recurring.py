@@ -47,7 +47,7 @@ class Weekly:
 
 
 def fössta_tossdan_i_mass() -> DateTime:
-    def get_first_thursday_of_march(year: int):
+    def get_first_thursday_of_march(year: int) -> DateTime:
         date = DateTime(year, 3, 1, tzinfo=CET)
         while date.isoweekday() != 4:
             date += TimeDelta(days=1)
