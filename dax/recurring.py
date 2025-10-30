@@ -46,10 +46,27 @@ class Weekly:
         return now + TimeDelta(days=7 - (current_weekday - self.weekday))
 
 
+def fössta_tossdan_i_mass() -> DateTime:
+    def get_first_thursday_of_march(year: int):
+        date = DateTime(year, 3, 1, tzinfo=CET)
+        while date.isoweekday() != 4:
+            date += TimeDelta(days=1)
+        return date
+
+    now = DateTime.now(tz=CET)
+    this_years_occasion = get_first_thursday_of_march(now.year)
+    if this_years_occasion < now:
+        return get_first_thursday_of_march(now.year + 1)
+    return this_years_occasion
+
+
 COUNTDOWNS: Final[dict[str, DatetimeGetter]] = {
     "julafton": Yearly(12, 24),
     "nyår": Yearly(1, 1),
     "kanelbullens dag": Yearly(10, 4),
     "pizzaonsdag": Weekly(3, Time(12)),
     "löpartorsdag": Weekly(4, Time(12)),
+    "våffeldagen": Yearly(3, 25),
+    "bulle med bulle": Yearly(4, 10),
+    "fössta tossdan i mass": fössta_tossdan_i_mass,
 }
