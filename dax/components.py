@@ -61,7 +61,7 @@ def base_template(content: h.Node, extra_actions: Iterable[h.Node] | None = None
                     ],
                 ],
             ],
-            h.main[h.div(".container.countdown-container")[content]],
+            h.main[content],
         ],
     ]
 
@@ -113,7 +113,7 @@ def form_page(initial_title: str | None = None) -> h.Element:
 
 
 def countdown(heading: str, target: datetime, id: int = 1) -> h.Element:
-    return h.article(".countdown-content")[
+    return h.article(".countdown")[
         h.h1[heading],
         h.div(f"#flipdown_{id}.flipdown", data_target=int(target.timestamp())),
         h.div(".target-date")[h.i[target.strftime("%Y-%m-%d %H:%M")]],
