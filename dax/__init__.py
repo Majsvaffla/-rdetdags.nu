@@ -109,6 +109,16 @@ def _get_countdown_data(slug: str) -> CountDownUIData | None:
     return {"heading": escape(cd.title), "target": cd.date.replace(tzinfo=CET)}
 
 
+def _make_form_or_countdown(slug: str | None) -> Response:
+    if not slug:
+        return make_response(str(components.form_page()))
+
+    cd = _get_countdown_data(slug)
+    if not cd:
+        return make_response(str(components.form_page(initial_title=escape(slug).capitalize())), 404)
+    return make_response(str(components.countdown_page(**cd)))
+
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/<slug>", methods=["GET"])
 @app.route("/<slug>/", methods=["GET"])
@@ -136,22 +146,17 @@ def countdown(slug: str | None = None) -> Response:
 
     assert request.method == "GET"
 
-    if not slug:
-        return make_response(str(components.form_page()))
-
-    cd = _get_countdown_data(slug)
-    if not cd:
-        return make_response(str(components.form_page(initial_title=escape(slug).capitalize())), 404)
-    return make_response(str(components.countdown_page(**cd)))
+    return _make_form_or_countdown(slug)
 
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 @app.route("/<path:path>/")
 def countdown_grid(path: str) -> Response:
-    return make_response(
-        str(components.countdowns_page(cd for slug in path.split("/") if (cd := _get_countdown_data(slug))))
-    )
+    slugs = path.split("/")
+    if len(slugs) == 1:
+        return _make_form_or_countdown(slugs[0])
+    return make_response(str(components.countdowns_page(cd for slug in slugs if (cd := _get_countdown_data(slug)))))
 
 
 def _make_json_response(data: CountDownAPIData | None, status_code: int) -> Response:

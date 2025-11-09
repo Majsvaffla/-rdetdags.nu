@@ -41,18 +41,10 @@
     }
 }
 
-html,
-body,
-main {
-    height: 100%;
-}
-
 body {
-    --header-height: 3rem;
-
     display: flex;
     flex-direction: column;
-    padding-bottom: var(--header-height);
+    padding-bottom: var(--pico-block-spacing-vertical);
 
     &>header,
     &>main {
@@ -60,7 +52,6 @@ body {
     }
 
     &>header {
-        height: var(--header-height);
         position: sticky;
         z-index: 1;
         top: 0;
@@ -69,15 +60,14 @@ body {
 
     &>main {
         --countdown-min-width: 29rem;
-        --countdown-max-height: 13rem;
-        align-self: center;
-        align-content: center;
+        --countdown-max-height: 14rem;
 
         display: grid;
         grid-template-rows: var(--countdown-max-height);
-        grid-template-columns: repeat(auto-fill, minmax(var(--countdown-min-width), 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(var(--countdown-min-width), 1fr));
         gap: var(--pico-block-spacing-vertical) var(--pico-block-spacing-horizontal);
-        margin-bottom: var(--pico-block-spacing-vertical);
+        align-content: center;
+        justify-items: center;
 
         .countdown {
             max-height: var(--countdown-max-height);
