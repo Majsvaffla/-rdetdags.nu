@@ -69,4 +69,5 @@ COUNTDOWNS: Final[dict[str, DatetimeGetter]] = {
     "våffeldagen": Yearly(3, 25),
     "bulle med bulle": Yearly(4, 10),
     "fössta tossdan i mass": fössta_tossdan_i_mass,
+    "smörgåstårtans dag": Yearly(11, 13),
 }
