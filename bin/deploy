@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-set -x 
+set -x
 
 fqdn="xn--rdetdags-zza.nu"
 # Copy required configuration files.
@@ -36,7 +36,7 @@ function alive_or_exit {
 }
 
 # Perform health checks.
-alive_or_exit ssh dax@$fqdn "dotenv $curl http://localhost:8000/-/"
+alive_or_exit ssh dax@$fqdn "dotenv $curl http://localhost:8001/-/"
 alive_or_exit "$curl https://$fqdn/-/"
 
 echo Deployment successful!
